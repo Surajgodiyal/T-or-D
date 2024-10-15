@@ -3,17 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Truth or Dare Game</title>
+    <title>Truth or Dare</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             text-align: center;
             background: #f0f0f0;
         }
+        #main-title {
+            font-size: 36px;
+            font-weight: bold;
+            color: white;
+            padding: 20px;
+            background-image: url('https://github.com/Surajgodiyal/T-or-D/blob/main/IMG_20241015_093702.jpg');
+            background-size: cover;
+            background-position: center;
+            display: inline-block;
+            margin-top: 20px;
+            border-radius: 10px;
+        }
         #players {
             margin: 20px;
         }
-        #spin-button {
+        #spin-button, #truth-button, #dare-button {
             padding: 10px 20px;
             margin-top: 20px;
             font-size: 16px;
@@ -24,11 +36,15 @@
             font-size: 20px;
             font-weight: bold;
         }
+        #settings {
+            margin-top: 20px;
+            font-size: 16px;
+        }
     </style>
 </head>
 <body>
 
-<h1>Truth or Dare Game</h1>
+<h1 id="main-title">Truth or Dare</h1>
 <div id="players">
     <h2>Enter Player Names</h2>
     <input type="text" id="player-input" placeholder="Enter player name">
@@ -36,67 +52,57 @@
     <ul id="player-list"></ul>
 </div>
 
-<button id="spin-button" onclick="spin()">Spin!</button>
+<div>
+    <button id="spin-button" onclick="spin()">Spin!</button>
+    <button id="truth-button" onclick="selectTruth()">Truth</button>
+    <button id="dare-button" onclick="selectDare()">Dare</button>
+</div>
+
 <div id="result"></div>
+
+<div id="settings">
+    <label for="mode-select">Select Mode:</label>
+    <select id="mode-select">
+        <option value="normal">Normal</option>
+        <option value="adult">Adult</option>
+    </select>
+</div>
 
 <script>
     const players = [];
-    const truths = [
-        "What is your biggest fear?",
-        "If you could change one thing about yourself, what would it be?",
-        "What is your most embarrassing moment?",
-        "Who is your crush?",
-        "What is a secret you have never told anyone?",
-        "If you could have dinner with any celebrity, who would it be?",
-        "What is your guilty pleasure?",
-        "If you could live anywhere, where would it be?",
-        "What is the most daring thing you've done?",
-        "What is your biggest regret?",
-        "What is something you wish you knew how to do?",
-        "What was your first impression of your best friend?",
-        "What is your dream job?",
-        "What is the worst date you've ever had?",
-        "What is your favorite childhood memory?",
-        "Who is the most important person in your life?",
-        "What is your biggest pet peeve?",
-        "If you could time travel, where would you go?",
-        "What is your hidden talent?",
-        "What is the craziest thing you've ever done?",
-        "What is your favorite book?",
-        "What is your favorite movie?",
-        "What is your favorite quote?",
-        "What is your biggest dream?",
-        "What is something you've always wanted to try but haven't?"
-    ];
+    const truths = {
+        normal: [
+            "🤔 What is your biggest fear?",
+            "😳 What is your most embarrassing moment?",
+            "❤️ Who is your crush?",
+            "🎉 What is the most daring thing you've done?",
+            "🌍 If you could live anywhere, where would it be?"
+        ],
+        adult: [
+            "🔥 What is the most awkward thing you've done during a date?",
+            "🙈 Have you ever kissed someone of the same gender?",
+            "👙 Describe the craziest outfit you have ever worn.",
+            "🍷 What is your wildest party experience?",
+            "🤭 What is the most unusual thing you've been asked on a date?"
+        ]
+    };
     
-    const dares = [
-        "Dance with no music for one minute.",
-        "Sing a song chosen by the other players.",
-        "Do 20 pushups.",
-        "Try to lick your elbow.",
-        "Imitate a celebrity of the group's choice.",
-        "Eat a spoonful of a condiment of the group's choice.",
-        "Speak in an accent for the next three rounds.",
-        "Let someone draw on your face.",
-        "Post an embarrassing photo on social media.",
-        "Let the group pick a fashion style for you to wear for a day.",
-        "Do a cartwheel or handstand.",
-        "Try to juggle three items.",
-        "Do your best impression of a baby being born.",
-        "Call a random contact and sing 'Happy Birthday' to them.",
-        "Let someone give you a silly hairstyle.",
-        "Wear socks on your hands for the next three rounds.",
-        "Act like a monkey until your next turn.",
-        "Talk like a robot until your next turn.",
-        "Take a silly selfie and send it to a friend.",
-        "Do your best chicken dance outside.",
-        "Talk without using the letter 'E' for 5 minutes.",
-        "Do an impression of your favorite cartoon character.",
-        "Let someone tickle you for 30 seconds.",
-        "Speak in rhymes until your next turn.",
-        "Do your best impression of the person to your left.",
-        "Pretend to be a waiter/waitress and take snack orders from everyone."
-    ];
+    const dares = {
+        normal: [
+            "🕺 Dance with no music for one minute.",
+            "🎤 Sing a song chosen by the other players.",
+            "🏃‍♂️ Do 20 pushups.",
+            "🧢 Wear your hat backwards until your next turn.",
+            "📸 Take a silly selfie and send it to a friend."
+        ],
+        adult: [
+            "👄 Imitate a celebrity's sexy voice.",
+            "😜 Give a seductive look for 30 seconds.",
+            "🍾 Drink a glass of water without using hands.",
+            "🎉 Do your best striptease dance (keep your clothes on!).",
+            "💋 Kiss your hand passionately."
+        ]
+    };
 
     function addPlayer() {
         const playerInput = document.getElementById("player-input");
@@ -118,19 +124,21 @@
 
         const randomPlayerIndex = Math.floor(Math.random() * players.length);
         const selectedPlayer = players[randomPlayerIndex];
-        const randomTruthOrDare = Math.random() < 0.5 ? 'Truth' : 'Dare';
-        
-        let selectedQuestion;
-        if (randomTruthOrDare === 'Truth') {
-            selectedQuestion = truths[Math.floor(Math.random() * truths.length)];
-        } else {
-            selectedQuestion = dares[Math.floor(Math.random() * dares.length)];
-        }
+        document.getElementById("result").textContent = `${selectedPlayer}, it's your turn!`;
+    }
 
-        const resultDiv = document.getElementById("result");
-        resultDiv.textContent = `${selectedPlayer}, it's your turn! You got a ${randomTruthOrDare}: "${selectedQuestion}"`;
+    function selectTruth() {
+        const mode = document.getElementById("mode-select").value;
+        const selectedTruth = truths[mode][Math.floor(Math.random() * truths[mode].length)];
+        document.getElementById("result").textContent += ` You got a Truth: "${selectedTruth}"`;
+    }
+
+    function selectDare() {
+        const mode = document.getElementById("mode-select").value;
+        const selectedDare = dares[mode][Math.floor(Math.random() * dares[mode].length)];
+        document.getElementById("result").textContent += ` You got a Dare: "${selectedDare}"`;
     }
 </script>
 
 </body>
-  </html>
+    </html>
